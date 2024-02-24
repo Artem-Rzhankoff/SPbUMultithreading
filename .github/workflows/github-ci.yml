@@ -1,0 +1,15 @@
+﻿on: [push, pull_request]
+
+jobs:
+  build:
+    
+    runs-on: windows-latest
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.x'
+      - name: Build
+        run: dotnet build
+      - name: Test
+        run: dotnet test
