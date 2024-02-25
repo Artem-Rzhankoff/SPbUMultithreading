@@ -5,45 +5,32 @@ namespace TreiberStack;
 public class MyConcurrentStack<T>
 {
 
-    private Node<T> _head;
-
-    private static bool CompareAndSet(ref Node<T> value, Node<T> expectedValue, Node<T> newValue)
-    {
-        if (EqualityComparer<T>.Default.Equals(value.Data, expectedValue.Data))
-        {
-            value = newValue;
-            return true;
-        }
-
-        return false;
-    }
+    private Node<T>? _head;
     
-    public T Pop()
+    public virtual void Push(T value)
     {
+        var newNode = new Node<T>(value);
         while (true)
         {
-            var localHead = _head;
-            if (CompareAndSet(ref _head, localHead, localHead.Next))
-            {
-                return localHead.Data;
-            }
-            
-        }
-    }
-
-    public void Push(T value)
-    {
-        while (true)
-        {
-            var localHead = _head;
-            var newNode = new Node<T>(value, localHead);
-            if (CompareAndSet(ref _head, localHead, newNode))
+            if (TryPush(newNode))
             {
                 return;
             }
         }
     }
-
+    
+    public virtual T Pop()
+    {
+        while (true)
+        {
+            var returnNode = TryPop();
+            if (returnNode != null)
+            {
+                return returnNode.Data;
+            }
+        }
+    }
+    
     public T TopElement()
     {
         var localHead = _head;
@@ -54,4 +41,25 @@ public class MyConcurrentStack<T>
 
         return localHead.Data;
     }
+
+
+    protected bool TryPush(Node<T> node)
+    {
+        var oldHead = _head;
+        node.Next = oldHead;
+        return CompareExchange(ref _head, oldHead, node) == node;
+    }
+
+    protected Node<T>? TryPop()
+    {
+        var oldNode = _head;
+        if (oldNode == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        var newNode = oldNode.Next;
+        return CompareExchange(ref _head, oldNode, newNode) == newNode ? oldNode : null;
+    }
+    
 }
