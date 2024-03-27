@@ -12,6 +12,7 @@ public class MyConcurrentStack<T>
         var newNode = new Node<T>(value);
         while (true)
         {
+            var a = true;
             if (TryPush(newNode))
             {
                 return;
@@ -47,7 +48,7 @@ public class MyConcurrentStack<T>
     {
         var oldHead = _head;
         node.Next = oldHead;
-        return CompareExchange(ref _head, oldHead, node) == node;
+        return CompareExchange(ref _head, node, oldHead) == oldHead;
     }
 
     protected Node<T>? TryPop()
@@ -59,7 +60,8 @@ public class MyConcurrentStack<T>
         }
 
         var newNode = oldNode.Next;
-        return CompareExchange(ref _head, oldNode, newNode) == newNode ? oldNode : null;
+        var returnValue = CompareExchange(ref _head, newNode, oldNode) == oldNode ? oldNode : null;
+        return returnValue;
     }
     
 }
