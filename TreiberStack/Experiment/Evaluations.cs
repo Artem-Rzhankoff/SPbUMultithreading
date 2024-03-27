@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using TreiberStack;
-using static System.Threading.Interlocked;
 
 namespace Experiment;
 
@@ -28,7 +28,7 @@ public class Evaluations
       }
    }
 
-   private static void _evaluatePushesAndPops100(MyConcurrentStack<string> stack)
+   private static void _evaluatePushesAndPops1000(MyConcurrentStack<string> stack)
    {
       for (var i = 0; i < 1000; i++)
       {
@@ -45,7 +45,7 @@ public class Evaluations
 
       for (var i = 0; i < threadsCount; i++)
       {
-         threads[i] = new Thread(() => _evaluate100(stack)); // тут мб делегат потом заюзать??
+         threads[i] = new Thread(() => _evaluatePushesAndPops1000(stack)); // тут мб делегат потом заюзать??
       }
       
       foreach (var thread in threads)
@@ -70,7 +70,6 @@ public class Evaluations
       var results = new double[2];
       for (var i = 0; i < 2; ++i)
       {
-         Console.WriteLine("asfdasdfafa");
          _stopwatch.Start();
          EvaluateStackOperations(i == 1 ? concurrentStack : eliminationBackoffStack);
          _stopwatch.Stop();
@@ -78,7 +77,6 @@ public class Evaluations
          _stopwatch.Reset();
       }
       
-      Console.WriteLine($"{concurrentStack.Pop() == eliminationBackoffStack.Pop()}");
       Console.WriteLine($"concurrent: {results[0]}, elimination: {results[1]}");
    }
 }
