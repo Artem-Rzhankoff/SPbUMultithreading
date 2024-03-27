@@ -1,6 +1,6 @@
 ﻿namespace TreiberStack;
 
-public class EliminationArray<T>
+public class EliminationArray<T> where T : class
 {
     private long _duration;
     private LockFreeExchanger<T>[] _exchanger;
@@ -21,6 +21,7 @@ public class EliminationArray<T>
     public T? Visit(T? value, int range)
     {
         var slot = _random.Next(range);
+        //Console.WriteLine($"my random slot is {slot}");
         return _exchanger[slot].MyExchange(value, _duration);
     }
 }
