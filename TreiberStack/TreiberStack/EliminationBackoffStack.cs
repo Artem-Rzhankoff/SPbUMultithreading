@@ -3,7 +3,7 @@
 public class EliminationBackoffStack<T> : MyConcurrentStack<T> where T : class
 {
     private const int Capacity = 100;
-    private EliminationArray<T> _eliminationArray = new (Capacity, 10);
+    private readonly EliminationArray<T> _eliminationArray = new (Capacity, 10);
 
     public override void Push(T value)
     {
@@ -19,8 +19,8 @@ public class EliminationBackoffStack<T> : MyConcurrentStack<T> where T : class
             try
             {
                 var otherValue = _eliminationArray.Visit(value, 10);
-                // гарантирует, что обмен был осуществлен с pop
-                if (otherValue == null)
+                
+                if (otherValue == null) // значит, что обмен был осуществлен с pop
                 {
                     return;
                 }
@@ -42,7 +42,7 @@ public class EliminationBackoffStack<T> : MyConcurrentStack<T> where T : class
             try
             {
                 var otherValue = _eliminationArray.Visit(null, 10);
-                if (otherValue != null)
+                if (otherValue != null) // значит что обменялись с push
                 {
                     return otherValue;
                 }

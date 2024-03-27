@@ -2,14 +2,14 @@
 
 public class EliminationArray<T> where T : class
 {
-    private long _duration;
-    private LockFreeExchanger<T>[] _exchanger;
-    private Random _random;
+    private readonly long _duration;
+    private readonly LockFreeExchanger<T>[] _exchanger;
+    private readonly Random _random;
 
     public EliminationArray(int capacity, long timeout )
     {
         _exchanger = new LockFreeExchanger<T> [capacity];
-        for (int i = 0; i < capacity; i++)
+        for (var i = 0; i < capacity; i++)
         {
             _exchanger[i] = new LockFreeExchanger<T>();
         }
@@ -21,7 +21,6 @@ public class EliminationArray<T> where T : class
     public T? Visit(T? value, int range)
     {
         var slot = _random.Next(range);
-        //Console.WriteLine($"my random slot is {slot}");
         return _exchanger[slot].MyExchange(value, _duration);
     }
 }

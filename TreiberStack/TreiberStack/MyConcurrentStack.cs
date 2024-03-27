@@ -4,7 +4,6 @@ namespace TreiberStack;
 
 public class MyConcurrentStack<T>
 {
-
     private Node<T>? _head;
     
     public virtual void Push(T value)
@@ -12,7 +11,6 @@ public class MyConcurrentStack<T>
         var newNode = new Node<T>(value);
         while (true)
         {
-            var a = true;
             if (TryPush(newNode))
             {
                 return;
