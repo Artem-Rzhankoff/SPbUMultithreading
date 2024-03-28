@@ -10,4 +10,10 @@
       <ProjectReference Include="..\TreiberStack\TreiberStack.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="IronPdf" Version="2024.3.4" />
+      <PackageReference Include="itext7" Version="8.0.3" />
+      <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />
+    </ItemGroup>
+
 </Project>
