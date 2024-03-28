@@ -20,7 +20,6 @@ public class LockFreeExchanger<T> where T : class
     public T? MyExchange(T? myItem, long timeout)
     {
         var status = myItem == null ? Stamp.WaitingPopper : Stamp.WaitingPusher;
-        Console.WriteLine("omg omg omg omg omg omg omg");
         
         var stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -73,13 +72,11 @@ public class LockFreeExchanger<T> where T : class
                     var cellWithBusyStamp = new Tuple<T?, Stamp>(myItem, Stamp.Busy);
                     if (status != Stamp.WaitingPopper && CompareExchange(ref _slot, cellWithBusyStamp, oldStamp).Equals(oldStamp))
                     {
-                        Console.WriteLine("youhoo popper");
                         return yrItem;
                     }
                     break;
                 case Stamp.WaitingPusher:
                     cellWithBusyStamp = new Tuple<T?, Stamp>(myItem, Stamp.Busy);
-                    Console.WriteLine("youhoo pusher");
                     if (status != Stamp.WaitingPusher && CompareExchange(ref _slot, cellWithBusyStamp, oldStamp).Equals(oldStamp))
                     {
                         return yrItem;
