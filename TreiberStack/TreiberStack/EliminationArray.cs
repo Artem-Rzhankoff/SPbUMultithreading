@@ -15,7 +15,7 @@ public class EliminationArray<T> where T : class
         }
 
         _random = new Random();
-        _duration =  timeout * 1000000; // convert milliseconds to nanoseconds
+        _duration =  timeout * 1_000_000; // convert milliseconds to nanoseconds
     }
 
     public T? Visit(T? value, int range)
