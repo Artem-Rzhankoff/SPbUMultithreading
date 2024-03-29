@@ -46,7 +46,7 @@ public class LockFreeExchanger<T> where T : class
                         {
                             yrItem = _slot.Item1;
                             // происходит обмен в данный момент
-                            if (_slot.Item2 == Stamp.Busy) // под вопросом
+                            if (_slot.Item2 == Stamp.Busy)
                             {
                                 // ожидающий поток -- единственный, кто может изменить состояние на empty
                                 Exchange(ref _slot, new Tuple<T?, Stamp>(null, Stamp.Empty));

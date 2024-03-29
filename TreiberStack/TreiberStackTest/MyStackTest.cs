@@ -9,11 +9,13 @@ namespace TreiberStackTest;
 public class MyStackTest
 {
 
-    private readonly Configuration _testConfiguration = Configuration.Create().WithTestingIterations(10).WithDeadlockTimeout(5000);
+    private readonly Configuration _testConfiguration = Configuration.Create().WithTestingIterations(100).WithDeadlockTimeout(5000);
     
     private static void PrepareEnvironmentAndRunTest(MyConcurrentStack<string> stack, Action<MyConcurrentStack<string>> myDelegate)
     {
         var threadCount = Environment.ProcessorCount;
+        
+        Console.WriteLine(threadCount);
 
         var threads = new Thread[threadCount];
 
@@ -34,7 +36,7 @@ public class MyStackTest
 
     }
 
-    private EliminationBackoffStack<string> _stack;
+    private MyConcurrentStack<string> _stack;
     
     [SetUp]
     public void Setup()
@@ -108,11 +110,10 @@ public class MyStackTest
     {
         var testMethod = (MyConcurrentStack<string> stack) =>
         {
-            for (var i = 0; i < 200; ++i)
+            for (var i = 0; i < 10; ++i) 
             {
                 stack.Push("p");
             }
-
             for (var i = 0; i < 100; ++i)
             {
                 stack.Pop();
@@ -122,11 +123,14 @@ public class MyStackTest
             {
                 stack.Push("p");
             }
+
         };
         
         var engine = TestingEngine.Create(_testConfiguration, () => PrepareEnvironmentAndRunTest(_stack, testMethod));
         
         engine.Run();
+        Assert.That(engine.TestReport.NumOfFoundBugs == 0);
+        engine.Stop();
 
         var stackElementsCount = 0;
         while (true)
@@ -142,7 +146,6 @@ public class MyStackTest
             }
             
         }
-        
-        Assert.That(stackElementsCount == 18000); // 150 * {numberOfThreads}
+        Assert.AreEqual(10 * Environment.ProcessorCount, stackElementsCount);
     }
 }

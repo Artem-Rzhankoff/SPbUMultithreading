@@ -6,4 +6,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="itext7" Version="8.0.3" />
+      <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />
+      <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="5.0.0-preview.5.20278.1" />
+    </ItemGroup>
+
 </Project>

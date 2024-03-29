@@ -4,11 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Experiment</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Compile Include="obj\Evaluations.cs" />
-    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\TreiberStack\TreiberStack.csproj" />

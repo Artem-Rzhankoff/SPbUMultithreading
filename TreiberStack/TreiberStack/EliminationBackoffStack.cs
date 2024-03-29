@@ -3,7 +3,7 @@
 public class EliminationBackoffStack<T> : MyConcurrentStack<T> where T : class
 {
     private const int Capacity = 100;
-    private readonly EliminationArray<T> _eliminationArray = new (Capacity, 10);
+    private readonly EliminationArray<T> _eliminationArray = new (Capacity, 3);
 
     public override void Push(T value)
     {

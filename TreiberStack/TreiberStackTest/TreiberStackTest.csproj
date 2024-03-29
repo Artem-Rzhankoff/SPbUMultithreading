@@ -10,8 +10,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="itext7" Version="8.0.3" />
+        <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />
         <PackageReference Include="Microsoft.Coyote.Core" Version="1.7.11" />
         <PackageReference Include="Microsoft.Coyote.Test" Version="1.7.11" />
+        <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="5.0.0-preview.5.20278.1" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
         <PackageReference Include="NUnit" Version="3.13.3"/>
         <PackageReference Include="NUnit3TestAdapter" Version="4.2.1"/>
