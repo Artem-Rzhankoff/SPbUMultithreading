@@ -1,4 +1,4 @@
-﻿namespace Experiment;
+﻿namespace MyExperiment;
 
 public record ExperimentData
 {

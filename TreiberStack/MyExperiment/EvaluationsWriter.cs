@@ -1,11 +1,11 @@
-﻿using iText.Kernel.Colors;
+﻿using iText.Layout;
+using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
-using iText.Layout;
 using iText.Layout.Element;
 using PdfDocument = iText.Kernel.Pdf.PdfDocument;
 using TextAlignment = iText.Layout.Properties.TextAlignment;
 
-namespace Experiment;
+namespace MyExperiment;
 
 public static class EvaluationsWriter
 {
@@ -13,6 +13,7 @@ public static class EvaluationsWriter
     {
         var fileNameSuffix = firstStack.IsRandomPadding ? "Random" : "";
         var fileName = $"performanceResults{fileNameSuffix}";
+        
         var writer = new PdfWriter($"./{fileName}.pdf");
         var document = new Document(new PdfDocument(writer));
 
@@ -32,7 +33,7 @@ public static class EvaluationsWriter
             new Cell(1, 1)
                 .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .Add(new Paragraph(firstStack.StackImplementation == ExperimentData.TypeOfStack.TreiberStack 
+                .Add(new Paragraph(secondStack.StackImplementation == ExperimentData.TypeOfStack.TreiberStack 
                     ? "Treiber stack" : "Elimination-backoff stack")),
         };
 
@@ -42,8 +43,8 @@ public static class EvaluationsWriter
             var eliminaitonResult = secondStack.Data[i].OperationsPerSecond;
             
             cells.Add(new Cell(1, 1).SetTextAlignment(TextAlignment.CENTER).Add(new Paragraph($"{i+1}")));
-            cells.Add(new Cell(1, 1).SetTextAlignment(TextAlignment.CENTER).Add(new Paragraph($"{treiberResult}")));
-            cells.Add(new Cell(1, 1).SetTextAlignment(TextAlignment.CENTER).Add(new Paragraph($"{eliminaitonResult}")));
+            cells.Add(new Cell(1, 1).SetTextAlignment(TextAlignment.CENTER).Add(new Paragraph($"{(int)treiberResult}")));
+            cells.Add(new Cell(1, 1).SetTextAlignment(TextAlignment.CENTER).Add(new Paragraph($"{(int)eliminaitonResult}")));
         }
 
         foreach (var cell in cells)
@@ -55,7 +56,7 @@ public static class EvaluationsWriter
         
         document.Close();
 
-        var pdf = IronPdf.PdfDocument.FromFile(fileName);
+        var pdf = IronPdf.PdfDocument.FromFile($"{fileName}.pdf");
 
         pdf.RasterizeToImageFiles($"{fileName}.png");
         
