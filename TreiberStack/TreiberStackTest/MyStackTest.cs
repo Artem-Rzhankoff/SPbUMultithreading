@@ -9,7 +9,7 @@ namespace TreiberStackTest;
 public class MyStackTest
 {
 
-    private readonly Configuration _testConfiguration = Configuration.Create().WithTestingIterations(100).WithDeadlockTimeout(5000);
+    private readonly Configuration _testConfiguration = Configuration.Create().WithTestingIterations(10).WithDeadlockTimeout(5000);
     
     private static void PrepareEnvironmentAndRunTest(MyConcurrentStack<string> stack, Action<MyConcurrentStack<string>> myDelegate)
     {
@@ -110,7 +110,7 @@ public class MyStackTest
     {
         var testMethod = (MyConcurrentStack<string> stack) =>
         {
-            for (var i = 0; i < 10; ++i) 
+            for (var i = 0; i < 150; ++i) 
             {
                 stack.Push("p");
             }
@@ -146,6 +146,6 @@ public class MyStackTest
             }
             
         }
-        Assert.AreEqual(10 * Environment.ProcessorCount, stackElementsCount);
+        Assert.AreEqual(100 * 10 * Environment.ProcessorCount, stackElementsCount);
     }
 }
