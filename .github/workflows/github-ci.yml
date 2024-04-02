@@ -2,14 +2,15 @@
 
 jobs:
   build:
-    
     runs-on: windows-latest
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.x'
+          dotnet-version: '8.x'
       - name: Build
-        run: dotnet build
+        run: $lnContent = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $lnContent) {dotnet build $file.FullName}
+      - name: Prepare environment
+        run: $lnContent = Get-ChildItem -Recurse -Filter '*TreiberStack.dll'; foreach ($file in $lnContent) {coyote rewrite $file.FullName}
       - name: Test
-        run: dotnet test
+        run: $lnContent = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $lnContent) {dotnet test $file.FullName}
