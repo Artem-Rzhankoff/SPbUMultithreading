@@ -1,6 +1,6 @@
 ﻿namespace MyThreadPool;
 
-public class MyTask<TResult>(Func<TResult> action, ITaskScheduler scheduler, CancellationToken cancellationToken) : IMyTask<TResult>
+public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, CancellationToken cancellationToken) : IMyTask<TResult>
 {
     private enum State
     {
@@ -53,7 +53,7 @@ public class MyTask<TResult>(Func<TResult> action, ITaskScheduler scheduler, Can
         }
     }
     
-    private void Execute()
+    internal void Execute()
     {
         while (true)
         {
@@ -67,7 +67,7 @@ public class MyTask<TResult>(Func<TResult> action, ITaskScheduler scheduler, Can
 
             try
             {
-                _result = action.Invoke();
+                _result = function.Invoke();
             } catch (Exception ex)
             {
                 _thrownException = ex;
