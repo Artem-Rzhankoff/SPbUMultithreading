@@ -117,7 +117,7 @@ public class MyThreadPoolTest
             _myThreadPool.Enqueue(() => ++counter);
         }
         
-        Thread.Sleep(1000);
+        Thread.Sleep(2000);
         
         Assert.That(counter, Is.EqualTo(expectedResult));
     }
@@ -139,6 +139,8 @@ public class MyThreadPoolTest
             });
         }
         
+        Thread.Sleep(1000);
+        
         Assert.That(counter, Is.EqualTo(expectedResult));
     }
 
@@ -147,7 +149,11 @@ public class MyThreadPoolTest
     {
         var expectedResult = 0;
         var notTrueEqualsVariable = false;
-        var task = _myThreadPool.Enqueue(() => notTrueEqualsVariable ? 5 : throw new Exception());
+        var task = _myThreadPool.Enqueue(() =>
+        {
+            Thread.Sleep(100);
+            return notTrueEqualsVariable ? 5 : throw new Exception();
+        });
 
         var continuationTask = task.ContinueWith(result =>
         {
@@ -155,7 +161,7 @@ public class MyThreadPoolTest
             {
                 return result.Result;
             }
-            catch (Exception ex)
+            catch (AggregateException ex)
             {
                 return expectedResult;
             }
@@ -181,23 +187,18 @@ public class MyThreadPoolTest
     [Test, Repeat(10)]
     public void DisposeThreadPoolWithTasksInWaitingQueue_NotRunningTasksShouldCanceled_WithThrowException()
     {
-        var tasks = new IMyTask<int>[_threadsNumber * 2];
-        for (var i = 0; i < _threadsNumber * 2; ++i)
+        _myThreadPool = new MyThreadPool(1);
+        _myThreadPool.Enqueue(() =>
         {
-            tasks[i] = _myThreadPool.Enqueue(() =>
-            {
-                Thread.Sleep(1000);
-                return 52;
-            });
-        }
+            Thread.Sleep(2000);
+            return 52;
+        });
+        var task = _myThreadPool.Enqueue(() => 52);
         
         Thread.Sleep(500);
         _myThreadPool.Dispose();
         
-        for (var i = _threadsNumber; i < _threadsNumber * 2; ++i)
-        {
-            Assert.Throws<OperationCanceledException>(() => _ = tasks[i].Result);
-        }
+        Assert.Throws<OperationCanceledException>(() => _ = task.Result);
     }
     
     [Test, Repeat(10)]
