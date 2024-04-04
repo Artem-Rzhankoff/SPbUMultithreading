@@ -1,16 +1,40 @@
 ﻿on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build-ubuntu:
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
       - name: Build
+        run: for file in $(find -name "*.sln"); do dotnet build $file; done
+      - name: Test
+        run: for file in $(find -name "*.sln"); do dotnet test $file; done
+        
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+      - name: Prepare environment with Coyote
+        shell: pwsh
+        run: |
+          $projectPaths = Get-ChildItem -Path . -Filter *.csproj -Recurse -File | ForEach-Object { $_.DirectoryName }
+          foreach ($projectPath in $projectPaths) {
+            Set-Location $projectPath
+            dotnet tool install --global Microsoft.Coyote.CLI
+            dotnet restore
+            $lnContent = Get-ChildItem -Recurse -Filter *.dll; foreach ($file in $lnContent) {coyote rewrite $file.FullName}
+            Set-Location -Path ..\..
+          }     
+          echo "${{ github.workspace }}/.dotnet/tools" >> $GITHUB_PATH
+      - name: Build
         run: $lnContent = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $lnContent) {dotnet build $file.FullName}
-      - name: Prepare environment
-        run: $lnContent = Get-ChildItem -Recurse -Filter '*TreiberStack.dll'; foreach ($file in $lnContent) {coyote rewrite $file.FullName}
       - name: Test
         run: $lnContent = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $lnContent) {dotnet test $file.FullName}
