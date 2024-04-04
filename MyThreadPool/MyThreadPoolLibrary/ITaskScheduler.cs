@@ -1,4 +1,4 @@
-﻿namespace MyThreadPool;
+﻿namespace MyThreadPoolLibrary;
 
 public interface ITaskScheduler
 {

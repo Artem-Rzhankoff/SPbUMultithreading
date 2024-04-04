@@ -1,14 +1,13 @@
 ﻿using System.Collections.Concurrent;
 
-namespace MyThreadPool;
+namespace MyThreadPoolLibrary;
 
 public class MyThreadPool : ITaskScheduler, IDisposable
 {
-    private readonly int _threadsCount;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ManualResetEvent _threadsRunHandle;
-    private List<Thread> _threads;
-    private ConcurrentQueue<Action> _tasks;
+    private readonly List<Thread> _threads;
+    private readonly ConcurrentQueue<Action> _tasks;
     private readonly object _lockObject;
 
     public MyThreadPool(int threadsCount)
@@ -17,16 +16,16 @@ public class MyThreadPool : ITaskScheduler, IDisposable
         {
             throw new ArgumentException($"Number of threads should be only positive, but actually is {threadsCount}");
         }
-        _threadsCount = threadsCount;
+
         _cancellationTokenSource = new CancellationTokenSource();
         _threadsRunHandle = new ManualResetEvent(false);
         _tasks = new ConcurrentQueue<Action>();
         _threads = new List<Thread>();
         _lockObject = new object();
 
-        for (var i = 0; i < _threadsCount; ++i)
+        for (var i = 0; i < threadsCount; ++i)
         {
-            var thread = new Thread(() => RunJob());
+            var thread = new Thread(RunJob);
             thread.Start();
             _threads.Add(thread);
             
@@ -48,6 +47,7 @@ public class MyThreadPool : ITaskScheduler, IDisposable
 
         lock (_lockObject)
         {
+            _cancellationTokenSource.Token.ThrowIfCancellationRequested();
             _tasks.Enqueue(task);
         }
 
@@ -56,16 +56,19 @@ public class MyThreadPool : ITaskScheduler, IDisposable
 
     public void Dispose()
     {
-        
+        _cancellationTokenSource.Cancel();
+        foreach (var thread in _threads)
+        {
+            thread.Join();
+        }
     }
 
     private void RunJob()
     {
-        // сюда вошел какой то поток
-        while (_cancellationTokenSource.Token.IsCancellationRequested)
+        while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
             _threadsRunHandle.WaitOne();
-
+            
             if (_tasks.TryDequeue(out var task)) // && !cancellationToken.IsCancellationRequested кажется что тут проверка необязательна
             {
                 task.Invoke();

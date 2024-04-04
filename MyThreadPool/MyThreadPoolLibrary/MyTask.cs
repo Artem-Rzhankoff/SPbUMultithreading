@@ -1,4 +1,4 @@
-﻿namespace MyThreadPool;
+﻿namespace MyThreadPoolLibrary;
 
 public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, CancellationToken cancellationToken) : IMyTask<TResult>
 {
@@ -76,8 +76,9 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
             if (Interlocked.CompareExchange(ref _convertedIsCompleted, 
                     (int)State.Completed, isCompletedState) == isCompletedState)
             {
-                _callbacks.ForEach(scheduler.Enqueue);
                 _taskCompletionHandle.Set();
+                _callbacks.ForEach(scheduler.Enqueue);
+                return;
             }
             
         }
