@@ -21,6 +21,11 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
     {
         get
         {
+            if (!IsCompleted)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            
             _taskCompletionHandle.WaitOne();
             
             if (_thrownException is not null)
@@ -44,7 +49,30 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
                 throw new InvalidOperationException($"Task is already completed with result = {Result}");
             }
             var continuationTask = new MyTask<TNewResult>(() => continuationAction(Result), scheduler, cancellationToken);
-            var newCallbacks = _callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList(); // Action --> Func<TNewResult> ?
+            var newCallbacks = _callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList();
+            
+            if (Interlocked.CompareExchange(ref _callbacks, newCallbacks, currentCallbacks) == currentCallbacks)
+            {
+                return continuationTask;
+            }
+        }
+    }
+
+    public IMyTask<TNewResult> ContinueWith<TNewResult>(Func<IMyTask<TResult>, TNewResult> continuation)
+    {
+        ArgumentNullException.ThrowIfNull(continuation);
+        
+        while (true)
+        {
+            var currentCallbacks = _callbacks;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (IsCompleted)
+            {
+                throw new InvalidOperationException($"Task is already completed with result = {Result}");
+            }
+            
+            var continuationTask = new MyTask<TNewResult>(() => continuation(this), scheduler, cancellationToken);
+            var newCallbacks = _callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList();
             
             if (Interlocked.CompareExchange(ref _callbacks, newCallbacks, currentCallbacks) == currentCallbacks)
             {
@@ -53,7 +81,7 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
         }
     }
     
-    internal void Execute()
+    internal void  Execute()
     {
         while (true)
         {

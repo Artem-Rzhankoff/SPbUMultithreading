@@ -69,7 +69,7 @@ public class MyThreadPool : ITaskScheduler, IDisposable
         {
             _threadsRunHandle.WaitOne();
             
-            if (_tasks.TryDequeue(out var task)) // && !cancellationToken.IsCancellationRequested кажется что тут проверка необязательна
+            if (_tasks.TryDequeue(out var task))
             {
                 task.Invoke();
             }
