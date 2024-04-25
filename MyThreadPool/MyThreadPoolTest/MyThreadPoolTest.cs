@@ -1,5 +1,4 @@
 ﻿using MyThreadPoolLibrary;
-using Interlocked = Microsoft.Coyote.Rewriting.Types.Threading.Interlocked;
 
 namespace MyThreadPoolTest;
 
@@ -161,7 +160,7 @@ public class MyThreadPoolTest
             {
                 return result.Result;
             }
-            catch (AggregateException ex)
+            catch (AggregateException)
             {
                 return expectedResult;
             }

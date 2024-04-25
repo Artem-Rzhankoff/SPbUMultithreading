@@ -2,20 +2,16 @@
 
 public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, CancellationToken cancellationToken) : IMyTask<TResult>
 {
-    private enum State
-    {
-        NotCompleted,
-        Completed
-    }
-    
+    private abstract record State;
+    private record UncompletedState(List<Action> Callbacks) : State;
+    private record CompletedState : State;
+
+    private State _state = new UncompletedState([]);
     private TResult? _result;
     private Exception? _thrownException;
-    private List<Action> _callbacks = [];
     private readonly ManualResetEvent _taskCompletionHandle = new(false);
-    private int _convertedIsCompleted = (int)State.NotCompleted; // for using in CompareExchange
-    
 
-    public bool IsCompleted => _convertedIsCompleted == (int)State.Completed;
+    public bool IsCompleted => _state is CompletedState;
     
     public TResult Result
     {
@@ -42,18 +38,26 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
         ArgumentNullException.ThrowIfNull(continuationAction);
         while (true)
         {
-            var currentCallbacks = _callbacks;
+            var currentState = _state;
             cancellationToken.ThrowIfCancellationRequested();
-            if (IsCompleted)
+            switch (_state)
             {
-                throw new InvalidOperationException($"Task is already completed with result = {Result}");
-            }
-            var continuationTask = new MyTask<TNewResult>(() => continuationAction(Result), scheduler, cancellationToken);
-            var newCallbacks = _callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList();
+                case CompletedState:
+                {
+                    throw new InvalidOperationException($"Task is already completed with result = {Result}");
+                }
+                case UncompletedState uncompletedState:
+                {
+                    var continuationTask = new MyTask<TNewResult>(() => continuationAction(Result), scheduler, cancellationToken);
+                    var newState = new UncompletedState(uncompletedState.Callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList());
             
-            if (Interlocked.CompareExchange(ref _callbacks, newCallbacks, currentCallbacks) == currentCallbacks)
-            {
-                return continuationTask;
+                    if (Interlocked.CompareExchange(ref _state, newState, currentState) == currentState)
+                    {
+                        return continuationTask;
+                    }
+
+                    break;
+                }
             }
         }
     }
@@ -64,19 +68,28 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
         
         while (true)
         {
-            var currentCallbacks = _callbacks;
+            var currentState = _state;
             cancellationToken.ThrowIfCancellationRequested();
-            if (IsCompleted)
+
+            switch (_state)
             {
-                throw new InvalidOperationException($"Task is already completed with result = {Result}");
-            }
+                case CompletedState:
+                {
+                    throw new InvalidOperationException($"Task is already completed with result = {Result}");
+                }
+                case UncompletedState uncompletedState:
+                {
+                    var continuationTask = new MyTask<TNewResult>(() => continuation(this), scheduler, cancellationToken);
+                    var newState = new UncompletedState(
+                        uncompletedState.Callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList());
             
-            var continuationTask = new MyTask<TNewResult>(() => continuation(this), scheduler, cancellationToken);
-            var newCallbacks = _callbacks.Concat(new[] { () => continuationTask.Execute() }).ToList();
-            
-            if (Interlocked.CompareExchange(ref _callbacks, newCallbacks, currentCallbacks) == currentCallbacks)
-            {
-                return continuationTask;
+                    if (Interlocked.CompareExchange(ref _state, newState, currentState) == currentState)
+                    {
+                        return continuationTask;
+                    }
+
+                    break;
+                }
             }
         }
     }
@@ -85,30 +98,36 @@ public class MyTask<TResult>(Func<TResult> function, ITaskScheduler scheduler, C
     {
         while (true)
         {
-            var isCompletedState = _convertedIsCompleted;
+            var currentState = _state;
+            switch (_state)
+            {
+                case CompletedState:
+                {
+                    throw new InvalidOperationException($"Task is already completed with result = {Result}");
+                }
+                case UncompletedState uncompletedState:
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-            if (IsCompleted)
-            {
-                throw new InvalidOperationException($"Task is already completed with result = {Result}");
-            }
-            cancellationToken.ThrowIfCancellationRequested();
+                    try
+                    {
+                        _result = function.Invoke();
+                    } catch (Exception ex)
+                    {
+                        _thrownException = ex;
+                    }
 
-            try
-            {
-                _result = function.Invoke();
-            } catch (Exception ex)
-            {
-                _thrownException = ex;
-            }
+                    var completedState = new CompletedState();
 
-            if (Interlocked.CompareExchange(ref _convertedIsCompleted, 
-                    (int)State.Completed, isCompletedState) == isCompletedState)
-            {
-                _taskCompletionHandle.Set();
-                _callbacks.ForEach(scheduler.Enqueue);
-                return;
+                    if (Interlocked.CompareExchange(ref _state, completedState, currentState) == currentState)
+                    {
+                        uncompletedState.Callbacks.ForEach(scheduler.Enqueue);
+                        _taskCompletionHandle.Set();
+                        return;
+                    }
+                    break;
+                }
             }
-            
         }
     }
 }

@@ -73,6 +73,10 @@ public class MyThreadPool : ITaskScheduler, IDisposable
             {
                 task.Invoke();
             }
+            else
+            {
+                _threadsRunHandle.Reset();
+            }
         }
     }
 }
