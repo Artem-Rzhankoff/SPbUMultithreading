@@ -67,7 +67,7 @@ public class MyThreadPool : ITaskScheduler, IDisposable
     {
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
-            _threadsRunHandle.WaitOne();
+            WaitHandle.WaitAny([_threadsRunHandle, _cancellationTokenSource.Token.WaitHandle]);
             
             if (_tasks.TryDequeue(out var task))
             {

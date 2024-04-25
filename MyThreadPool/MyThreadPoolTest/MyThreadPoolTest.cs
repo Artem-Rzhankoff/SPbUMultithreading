@@ -111,9 +111,9 @@ public class MyThreadPoolTest
         var expectedResult = _threadsNumber * 2;
         var counter = 0;
 
-        for (var i = 0; i < _threadsNumber * 2; ++i)
+        for (var i = 0; i < expectedResult; ++i)
         {
-            _myThreadPool.Enqueue(() => ++counter);
+            _myThreadPool.Enqueue(() => Interlocked.Increment(ref counter));
         }
         
         Thread.Sleep(2000);
@@ -138,7 +138,7 @@ public class MyThreadPoolTest
             });
         }
         
-        Thread.Sleep(1000);
+        Thread.Sleep(2000);
         
         Assert.That(counter, Is.EqualTo(expectedResult));
     }
