@@ -186,6 +186,7 @@ public class MyThreadPoolTest
     [Test, Repeat(10)]
     public void DisposeThreadPoolWithTasksInWaitingQueue_NotRunningTasksShouldCanceled_WithThrowException()
     {
+        _myThreadPool.Dispose();
         _myThreadPool = new MyThreadPool(1);
         _myThreadPool.Enqueue(() =>
         {

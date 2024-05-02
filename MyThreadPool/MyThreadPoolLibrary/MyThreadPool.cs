@@ -7,7 +7,7 @@ public class MyThreadPool : ITaskScheduler, IDisposable
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ManualResetEvent _threadsRunHandle;
     private readonly List<Thread> _threads;
-    private readonly ConcurrentQueue<Action> _tasks;
+    private readonly Queue<Action> _tasks;
     private readonly object _lockObject;
 
     public MyThreadPool(int threadsCount)
@@ -19,7 +19,7 @@ public class MyThreadPool : ITaskScheduler, IDisposable
 
         _cancellationTokenSource = new CancellationTokenSource();
         _threadsRunHandle = new ManualResetEvent(false);
-        _tasks = new ConcurrentQueue<Action>();
+        _tasks = new Queue<Action>();
         _threads = new List<Thread>();
         _lockObject = new object();
 
@@ -49,9 +49,8 @@ public class MyThreadPool : ITaskScheduler, IDisposable
         {
             _cancellationTokenSource.Token.ThrowIfCancellationRequested();
             _tasks.Enqueue(task);
+            _threadsRunHandle.Set();
         }
-
-        _threadsRunHandle.Set();
     }
 
     public void Dispose()
@@ -68,15 +67,16 @@ public class MyThreadPool : ITaskScheduler, IDisposable
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
             WaitHandle.WaitAny([_threadsRunHandle, _cancellationTokenSource.Token.WaitHandle]);
-            
-            if (_tasks.TryDequeue(out var task))
+
+            Action? task;
+            lock (_lockObject)
             {
-                task.Invoke();
+                if (!_tasks.TryDequeue(out task))
+                {
+                    _threadsRunHandle.Reset();
+                }
             }
-            else
-            {
-                _threadsRunHandle.Reset();
-            }
+            task?.Invoke();
         }
     }
 }
